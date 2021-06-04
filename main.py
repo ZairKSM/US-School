@@ -25,12 +25,12 @@ class Player(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self):
         super(Bullet, self).__init__()
-        self.surf = pygame.image.load(f"{path}\Map\Stars\Star_1.png").convert()
+        self.surf = pygame.image.load("attacks/fire_1/Fire_1_3.png").convert()
         self.posx = 0
         self.posy = SCREEN_HEIGHT*0.85
         self.speed = 5
-        self.last = pygame.time.get_ticks()
-        self.cooldown = 50 
+        self.degat = 10
+         
     
 import random
 
@@ -64,7 +64,7 @@ while running:
             
 
     if mouseIsDown == True:
-        cooldown = 50
+        cooldown = 100
         
         now = pygame.time.get_ticks()
         if now - last >= cooldown:
