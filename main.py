@@ -20,6 +20,16 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.image.load(f"{path}\Ships\Ship_1.png").convert()
         #self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
+        self.life = 200
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Bullet, self).__init__()
+        self.surf = pygame.image.load(f"{path}\Map\Stars\Star_1.png").convert()
+        self.posx = 0
+        self.posy = SCREEN_HEIGHT*0.85
+        self.speed = 5
+import random
 
 pygame.init()
 SCREEN_WIDTH = 1920//3
@@ -33,16 +43,31 @@ background.fill((0, 0, 0))
 player = Player()
 running = True
 screen.blit(player.surf, (SCREEN_WIDTH/2- 75//2, SCREEN_HEIGHT*0.90))
+
+
+clock = pygame.time.Clock()
+bullet = []
 while running:
     #Verifie si l'événement close window a eu lieu
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            bullet.append(Bullet())
+            
     
     pressed_keys = pygame.key.get_pressed()
     mousePos = pygame.mouse.get_pos()
     
     screen.blit(background, (0, 0))
     screen.blit(player.surf, (mousePos[0]- 75//2 , SCREEN_HEIGHT*0.85))
+    for i in range(len(bullet)):
+        
+        if bullet[i].posx == 0:
+            bullet[i].posx = mousePos[0] -8
+        bullet[i].posy -= bullet[i].speed
+        screen.blit(bullet[i].surf, (bullet[i].posx , bullet[i].posy))
+  
   
     pygame.display.flip()
+    clock.tick(144)
