@@ -29,6 +29,9 @@ class Bullet(pygame.sprite.Sprite):
         self.posx = 0
         self.posy = SCREEN_HEIGHT*0.85
         self.speed = 5
+        self.last = pygame.time.get_ticks()
+        self.cooldown = 50 
+    
 import random
 
 pygame.init()
@@ -39,7 +42,7 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 background.fill((0, 0, 0))
-
+#pygame.mouse.set_visible(False)
 player = Player()
 running = True
 screen.blit(player.surf, (SCREEN_WIDTH/2- 75//2, SCREEN_HEIGHT*0.90))
@@ -47,15 +50,27 @@ screen.blit(player.surf, (SCREEN_WIDTH/2- 75//2, SCREEN_HEIGHT*0.90))
 
 clock = pygame.time.Clock()
 bullet = []
+mouseIsDown= False
+last = 0 
 while running:
     #Verifie si l'événement close window a eu lieu
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            bullet.append(Bullet())
+            mouseIsDown = True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            mouseIsDown = False
             
-    
+
+    if mouseIsDown == True:
+        cooldown = 50
+        
+        now = pygame.time.get_ticks()
+        if now - last >= cooldown:
+            last = pygame.time.get_ticks()
+            bullet.append(Bullet())
+        
     pressed_keys = pygame.key.get_pressed()
     mousePos = pygame.mouse.get_pos()
     
