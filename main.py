@@ -30,6 +30,12 @@ class Bullet(pygame.sprite.Sprite):
         self.posy = SCREEN_HEIGHT*0.85
         self.speed = 5
         self.degat = 10
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Enemy, self).__init__()
+        self.surf = pygame.image.load("Enemy/Enemy_1/ship/ship.jpg").convert()
+
          
     
 import random
@@ -84,6 +90,7 @@ while running:
         bullet[i].posy -= bullet[i].speed
         screen.blit(bullet[i].surf, (bullet[i].posx , bullet[i].posy))
   
-  
+    enemy = Enemy()
+    screen.blit(enemy.surf,(100,100))
     pygame.display.flip()
     clock.tick(144)
