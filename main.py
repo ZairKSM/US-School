@@ -2,6 +2,7 @@ import pygame
 import pathlib
 path = pathlib.Path(__file__).parent.absolute()
 print(path)
+# NTR FELIX
 """from pygame.locals import (
     RLEACCEL,
     K_UP,
