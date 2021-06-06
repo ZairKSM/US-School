@@ -76,8 +76,9 @@ while running:
     
     screen.blit(background, (0, 0))
     screen.blit(player.surf, (mousePos[0]- 75//2 , SCREEN_HEIGHT*0.85))
+    
+    
     for i in range(len(bullet)):
-        
         if bullet[i].posx == 0:
             bullet[i].posx = mousePos[0] -8
         bullet[i].posy -= bullet[i].speed
