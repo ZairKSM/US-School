@@ -1,151 +1,144 @@
-import pygame, random, sys
+import pygame
 
-def main():
-  pygame.init()
+# Import random for random numbers
+import random
 
-  global screenSize, allColors, FPS, clock, surface
+# Import pygame.locals for easier access to key coordinates
+# Updated to conform to flake8 and black standards
+from pygame.locals import (
+    K_UP,
+    K_DOWN,
+    K_LEFT,
+    K_RIGHT,
+    K_ESCAPE,
+    KEYDOWN,
+    QUIT,
+)
 
-  screenSize = (640, 480)
+# Define constants for the screen width and height
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 700
 
-  surface = pygame.display.set_mode(screenSize)
-  pygame.display.set_caption('Space Shooters')
 
-  black    = (0  , 0  , 0  )
-  white    = (255, 255, 255)
-  gray     = (100, 100, 100)
-  navyblue = (60 , 60 , 100)
-  red      = (255, 0  , 0  )
-  green    = (0  , 255, 0  )
-  blue     = (0  , 0  , 255)
-  yellow   = (255, 255, 0  )
-  orange   = (255, 155, 55 )
-  purple   = (255, 0  , 255)
-  cyan     = (0  , 255, 255)
-  #             0      1     2      3      4      5       6      7       8       9
-  allColors = [white,red, green, blue, yellow, orange, purple, cyan, navyblue, gray]
-  clock = pygame.time.Clock()
+# Define the Player object extending pygame.sprite.Sprite
+# The surface we draw on the screen is now a property of 'player'
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Player, self).__init__()
+        self.surf = pygame.Surface((75, 25))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect()
 
-  FPS = 64
-#-------------------------------------------------------------------------------
-  spaceship = Spaceship()
-  bullets = Bullet(spaceship)
-  while True:
-    #step1 SetDelay
-    clock.tick(FPS)
-    #step2 reactOnPlayerInput
+    # Move the sprite based on keypresses
+    def update(self, pressed_keys):
+        if pressed_keys[K_UP]:
+            self.rect.move_ip(0, -5)
+        if pressed_keys[K_DOWN]:
+            self.rect.move_ip(0, 5)
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(-5, 0)
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(5, 0)
+
+        # Keep player on the screen
+        if self.rect.left < 0:
+            self.rect.left = 0
+        elif self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        elif self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+
+
+# Define the enemy object extending pygame.sprite.Sprite
+# The surface we draw on the screen is now a property of 'enemy'
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Enemy, self).__init__()
+        self.surf = pygame.Surface((20, 10))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                random.randint(0, SCREEN_HEIGHT),
+            )
+        )
+        self.speed = random.randint(5, 20)
+
+    # Move the sprite based on speed
+    # Remove it when it passes the left edge of the screen
+    def update(self):
+        self.rect.move_ip(-self.speed, 0)
+        if self.rect.right < 0:
+            self.kill()
+
+
+# Initialize pygame
+pygame.init()
+
+# Create the screen object
+# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Create a custom event for adding a new enemy.
+ADDENEMY = pygame.USEREVENT + 1
+pygame.time.set_timer(ADDENEMY, 250)
+
+# Create our 'player'
+player = Player()
+
+# Create groups to hold enemy sprites, and every sprite
+# - enemies is used for collision detection and position updates
+# - all_sprites is used for rendering
+enemies = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+
+# Variable to keep our main loop running
+running = True
+clock = pygame.time.Clock()
+# Our main loop
+while running:
+    # Look at every event in the queue
     for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-        terminate()
-      if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_ESCAPE:
-          terminate()
-        if event.key == pygame.K_UP:
-          spaceship.moveUp = True
-          spaceship.moveDown = False
-        if event.key == pygame.K_DOWN:
-          spaceship.moveUp = False
-          spaceship.moveDown = True
-        if event.key == pygame.K_LEFT:
-          spaceship.moveRight = False
-          spaceship.moveLeft = True
-        if event.key == pygame.K_RIGHT:
-          spaceship.moveRight = True
-          spaceship.moveLeft = False
-        if event.key == pygame.K_SPACE:
-          bullets.isShooting = True
+        # Did the user hit a key?
+        if event.type == KEYDOWN:
+            # Was it the Escape key? If so, stop the loop
+            if event.key == K_ESCAPE:
+                running = False
 
-      if event.type == pygame.KEYUP:
-        if event.key == pygame.K_UP:
-          spaceship.moveUp = False
-        if event.key == pygame.K_DOWN:
-          spaceship.moveDown = False
-        if event.key == pygame.K_LEFT:
-          spaceship.moveLeft = False
-        if event.key == pygame.K_RIGHT:
-          spaceship.moveRight = False
-        if event.key == pygame.K_SPACE:
-          bullets.isShooting = False
+        # Did the user click the window close button? If so, stop the loop
+        elif event.type == QUIT:
+            running = False
 
-    #step3 updateClasses/Variables
-    spaceship.update()
-    bullets.update(spaceship)
-    #step4 renderEverything
-    surface.fill((255,255,255))
-    bullets.render()
-    spaceship.render()
-    pygame.display.update()
+        # Should we add a new enemy?
+        elif event.type == ADDENEMY:
+            # Create the new enemy, and add it to our sprite groups
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
 
-def terminate():
-  pygame.quit()
-  sys.exit()
+    # Get the set of keys pressed and check for user input
+    pressed_keys = pygame.key.get_pressed()
+    player.update(pressed_keys)
 
-class Spaceship():
-  def __init__(self):
-    self.height = 32
-    self.width = 28
+    # Update the position of our enemies
+    enemies.update()
 
-    self.ssIMG = pygame.image.load("Ships/Ship_1.png")
+    # Fill the screen with black
+    screen.fill((0, 0, 0))
 
-    self.centerx = screenSize[0] / 2
-    self.centery = screenSize[1] / 2
+    # Draw all our sprites
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
 
-    self.speed = 5
-    self.color = allColors[9]
-
-    self.moveLeft, self.moveRight, self.moveUp, self.moveDown = False, False, False, False
-
-    self.rect = pygame.Rect(self.centerx - self.width / 2, self.centery - self.height / 2, self.width, self.height)
-
-
-  def update(self):
-    if self.moveLeft and self.rect.left > 0:
-      self.rect.centerx -= self.speed
-    if self.moveRight and self.rect.right < screenSize[0] - 1:
-      self.rect.centerx += self.speed
-    if self.moveUp and self.rect.top > 0:
-      self.rect.centery -= self.speed
-    if self.moveDown and self.rect.bottom < screenSize[1] - 1:
-      self.rect.centery += self.speed
-
-  def render(self):
-    surface.blit(self.ssIMG, self.rect)
-
-class Bullet():
-  def __init__(self, spaceship):
-    self.bulletIMG = pygame.image.load("Ships/Ship_1.png")
-
-    self.width = 8
-    self.height = 12
-
-    self.centerx = spaceship.rect.centerx
-    self.centery = spaceship.rect.centery
-
-    self.color = allColors[4]
-
-    self.speed = 16
-
-    self.isShooting = False
-
-    self.listOfBullets = []
-
-  def update(self, spaceship):
-    for i in range(len(self.listOfBullets)):
-      if i >= len(self.listOfBullets):
-        break
-      if self.listOfBullets[i]['counter'] >= 64:
-        del self.listOfBullets[i]
-        continue
-      self.listOfBullets[i]['rect'].centery -= self.speed
-      self.listOfBullets[i]['counter'] += 1
-
-    if self.isShooting:
-      self.listOfBullets.append({
-      'rect':pygame.Rect(spaceship.rect.centerx - self.width / 2, spaceship.rect.centery - self.height, self.width, self.height),
-      'counter':0
-      })
-
-  def render(self):
-    for i in range(len(self.listOfBullets)):
-      surface.blit(self.bulletIMG, self.listOfBullets[i]['rect'])
-
-main()
+    # Check if any enemies have collided with the player
+    if pygame.sprite.spritecollideany(player, enemies):
+        # If so, remove the player and stop the loop
+        player.kill()
+        running = False
+    print(player.rect)
+    # Flip everything to the display
+    pygame.display.flip()
+    clock.tick(144)
