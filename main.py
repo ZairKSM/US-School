@@ -1,4 +1,3 @@
-from test import Enemy
 import pygame
 
 # Import random for random numbers
@@ -73,7 +72,7 @@ class Player(pygame.sprite.Sprite):
         super(Player, self).__init__()
         
         self.surf = pygame.image.load(f"{path}\Ships\Ship_1.png").convert_alpha()
-        self.score = 0
+        self.score = 160
         self.rect = self.surf.get_rect()
         self.lastBullet= 0
         self.cooldown = 100
@@ -120,6 +119,7 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self,ally,isSuper):
         super(Bullet, self).__init__()
         self.ally = ally
+        self.super= isSuper
         if self.ally :
             if isSuper  == 0 : 
                 self.surf = pygame.image.load("attacks/fire_1/Fire_1_3.png").convert_alpha()
@@ -128,8 +128,14 @@ class Bullet(pygame.sprite.Sprite):
                 self.surf = pygame.image.load("attacks/Special_1/Special_1.png").convert_alpha()
                 self.damage = 50
         else:
-            self.surf = pygame.image.load("attacks/fire_2/Fire_1_3.png").convert_alpha()
-            self.damage = 10
+            if isSuper == 3:
+                self.surf = pygame.image.load("attacks/Special_2/Special_2.png").convert_alpha()
+                self.damage = 20
+
+            
+            else:
+                self.surf = pygame.image.load("attacks/fire_2/Fire_1_3.png").convert_alpha()
+                self.damage = 10
 
        
         self.rect = self.surf.get_rect()
@@ -148,9 +154,12 @@ class Bullet(pygame.sprite.Sprite):
             self.rect.move_ip(0,-self.speed)
             
         else :
-            
-            self.speed = 3
-            self.rect.move_ip(0,self.speed)
+            if self.super == 3:
+                self.speed = 10
+                self.rect.move_ip(0,self.speed)
+            else:
+                self.speed = 3
+                self.rect.move_ip(0,self.speed)
 
 
 class Ennemy(pygame.sprite.Sprite):
@@ -158,42 +167,113 @@ class Ennemy(pygame.sprite.Sprite):
         super(Ennemy, self).__init__()
         if EnemyType == 1 :
             self.surf = pygame.image.load("Enemy/Enemy_1/ship/ship.png").convert_alpha()
+            self.rect = self.surf.get_rect()
+            self.rect.left = random.randint(50,590)
             self.maxLife = 100
             self.life = 100
             self.cooldown = 2000
             self.typeEnemy= EnemyType
+            self.speed = 1
         elif EnemyType == 2 : 
             self.surf = pygame.image.load("Enemy/Enemy_2/ship/ship.png").convert_alpha()
+            self.rect = self.surf.get_rect()
+            self.rect.left = random.randint(50,590)
             self.maxLife = 40
             self.life = 40
-            self.cooldown = 1500
+            self.cooldown = 1000
             self.typeEnemy= EnemyType
+            self.speed = 2
+        elif EnemyType == 3 : 
+            self.surf = pygame.image.load("Enemy/Enemy_3/ship/ship.png").convert_alpha()
+            self.rect = self.surf.get_rect()
+            self.rect.left = random.randint(50,590)
+            self.maxLife = 20
+            self.life = 20
+            self.cooldown = 1000
+            self.typeEnemy= EnemyType
+            self.speed = 2
+        elif EnemyType == 4 : 
+            self.surf = pygame.image.load("Enemy/Boss_1/ship.png").convert_alpha()
+            self.surf =  pygame.transform.scale(self.surf, (int(72*2.5), int(73*2.5)))
+            self.rect = self.surf.get_rect()
+            self.rect.left = random.randint(0,450)
+            self.maxLife = 1500
+            self.life = 1500
+            self.cooldown = 300
+            self.typeEnemy= EnemyType
+            self.speed = 2
+            self.wall = False
+        elif EnemyType == 5 : 
+            self.surf = pygame.image.load("Enemy/Boss_2/ship.png").convert_alpha()
+            self.surf =  pygame.transform.scale(self.surf, (int(72*2.5), int(73*2.5)))
+            self.rect = self.surf.get_rect()
+            self.rect.left = random.randint(0,450)
+            self.maxLife = 1500
+            self.life = 1500
+            self.cooldown = 700
+            self.typeEnemy= EnemyType
+            self.speed = 2
+            self.wall = False
+            
         self.lastBullet = 0
-        self.rect = self.surf.get_rect()
-        self.rect.left = random.randint(50,590)
-        self.speed = 1
+        
+        self.rect.bottom = -100
+        
         
        
     def fire(self):
         now = pygame.time.get_ticks()
         if now - self.lastBullet >= self.cooldown:
             self.lastBullet = pygame.time.get_ticks()
-            bul = Bullet(False, 0)
+            
             if self.typeEnemy == 1 :
+                bul = Bullet(False, 0)
                 bul.rect.left = self.rect.left +45
             elif self.typeEnemy == 2 :
+                bul = Bullet(False, 0)
                 bul.rect.left = self.rect.left +20
+            elif self.typeEnemy == 3 :
+                bul = Bullet(False, 0)
+                bul.rect.left = self.rect.left +20
+            elif self.typeEnemy == 4 :
+                bul = Bullet(False, 0)
+                bul.rect.left = self.rect.left +85
+            elif self.typeEnemy == 5 :
+                bul = Bullet(False, 3)
+                bul.rect.left = self.rect.left +75
 
             bul.rect.bottom = self.rect.bottom+9
             bullet.add(bul)
             all_sprites.add(bul)
     
     def update(self):
+        if self.typeEnemy == 4 or self.typeEnemy == 5 :
+            if self.rect.bottom < 350:
+                self.rect.move_ip(0,self.speed)
+
+            elif self.rect.left < 450 and not(self.wall):
+                    self.rect.move_ip(self.speed,0)
+            elif self.rect.left > 0 :
+                self.wall = True
+                self.rect.move_ip(-self.speed,0)
+            else : 
+                self.wall = False
+
+            
+            
+            
+            
         
-        self.rect.move_ip(0,self.speed)
-        self.size = self.surf.get_size()
-        pygame.draw.rect(screen, (0,255,0), (self.rect.left   , self.rect.bottom -self.size[1] -13,self.size[0] * (self.life / self.maxLife),10))
-        self.fire()
+
+            self.size = self.surf.get_size()
+            pygame.draw.rect(screen, (0,255,0), (self.rect.left   , self.rect.bottom -self.size[1] -13,self.size[0] * (self.life / self.maxLife),10))
+            self.fire()
+
+        else:
+            self.rect.move_ip(0,self.speed)
+            self.size = self.surf.get_size()
+            pygame.draw.rect(screen, (0,255,0), (self.rect.left   , self.rect.bottom -self.size[1] -13,self.size[0] * (self.life / self.maxLife),10))
+            self.fire()
         #pygame.draw.rect(screen, (0,255,0), (self.rect.left , self.rect.bottom , self.rect.left+1, self.rect.bottom ))
 
         
@@ -209,22 +289,30 @@ class Ennemy(pygame.sprite.Sprite):
                         player.score += 10
                     elif self.typeEnemy == 2 :
                         player.score += 5
+                    elif self.typeEnemy == 3 :
+                        player.score += 15
+                    elif self.typeEnemy == 4 or self.typeEnemy == 5:
+                        player.score += 200
+                        global combatBoss
+                        combatBoss = False
+                    
                     par = Particule(self.rect.bottom, self.rect.left)
                     particule.add(par)
                     all_sprites.add(par)
                     self.kill()
-                
-class Map(pygame.sprite.Sprite):
-    def __init__(self):
-        super(Map, self).__init__()
-        self.surf = pygame.image.load("Map/map_1.png").convert_alpha()
-        self.rect = self.surf.get_rect()
-        self.mapSpeed = 2
 
-    def update(self):
-        self.rect.move_ip(0 , self.mapSpeed)
+
+
+            
+
         
-    
+            
+            
+        
+
+            
+      
+            
 def display():
     pygame.draw.rect(screen, (255,0,0), (20  , SCREEN_HEIGHT - 50, 400, 30))
     pygame.draw.rect(screen, (0,255,0), (20  , SCREEN_HEIGHT - 50, 400* (player.life / player.maxLife), 30))
@@ -236,27 +324,48 @@ def display():
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+Mapsurf = pygame.image.load(f"Map/map_3.png").convert_alpha()
+y = -8192     
+y1 = 0
+def update():
+    global y
+    global y1
+    global surf
+    
+    y1 += 5
+    y += 5
+    screen.blit( Mapsurf,(0,y))
+    screen.blit( Mapsurf,(0,y1))
+    if y > 8192:
+        y = -8190
+    if y1 > 8192:
+        y1 = -8190
 player= Player()
 
 
 bullet = pygame.sprite.Group()
 ennemy = pygame.sprite.Group()
 particule = pygame.sprite.Group()
-map = pygame.sprite.Group()
 
-map.add(Map())
+
+
+
 all_sprites = pygame.sprite.Group()
-all_sprites.add(map)
 all_sprites.add(player)
 
 ADDENEMY = pygame.USEREVENT + 1
 pygame.time.set_timer(ADDENEMY, 5000)
+ADDBOSS = pygame.USEREVENT + 2
+pygame.time.set_timer(ADDBOSS, 10000)
 pixelFont = pygame.font.Font("font/Pixeboy.ttf", 50)
 
 running=True
 mouseIsDown= False
 EIsDown = False
 clock = pygame.time.Clock()
+combatBoss = False
+k=0
 while running:
     #Verifie si l'événement close window a eu lieu
     
@@ -275,11 +384,26 @@ while running:
                 EIsDown= False
                 
         elif event.type == ADDENEMY :
+            
             for i in range(random.randint(1, 5)):
-                en = Ennemy(random.randint(1,2))
+                en = Ennemy(random.randint(1,3))
                 ennemy.add(en)
                 
                 all_sprites.add(en)
+        
+        elif event.type == ADDBOSS:
+            if player.score >= 50:
+                if combatBoss == False:
+                    k+=1
+                    print(combatBoss)
+                    combatBoss=True
+                    if k%2 ==1 :
+                        n=4
+                    else: n = 5
+                    en=  Ennemy(n)
+                    ennemy.add(en)   
+                    all_sprites.add(en)
+                    
 
     if mouseIsDown == True :
         player.fire(mousePos, 0)
@@ -292,12 +416,11 @@ while running:
     screen.fill((0,0,0))
     pressed_keys = pygame.key.get_pressed()
     mousePos = pygame.mouse.get_pos()
-    
+    update()
     player.update(mousePos)
     bullet.update()
     particule.update()
     ennemy.update()
-    map.update()
     
     
     
